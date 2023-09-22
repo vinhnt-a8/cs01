@@ -6,8 +6,8 @@ contract SimpleStorage {
   event Set(address indexed caller, string message);
 
   function set(string memory message) public {
-    storedData = message;
     require(bytes(message).length <= 64, 'The message is too long');
+    storedData = message;
     emit Set(msg.sender, message);
   }
 
