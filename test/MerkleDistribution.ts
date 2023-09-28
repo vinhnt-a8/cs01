@@ -7,7 +7,7 @@ import { xor } from '../src/utils'
 describe('SimpleStorage', function () {
   const abiCoder = new AbiCoder()
 
-  const deriveMerkleRoot = (children: Uint8Array[]): Uint8Array => {
+  function deriveMerkleRoot(children: Uint8Array[]): Uint8Array {
     if (!children.length) throw new Error('Invalid input.')
     const clone = [...children]
     const upper: Uint8Array[] = []
@@ -30,7 +30,8 @@ describe('SimpleStorage', function () {
   // We use loadFixture to run this setup once, snapshot that state,
   // and reset Hardhat Network to that snapshot in every test.
   async function deployFixture() {
-    const [owner, otherAccount] = await ethers.getSigners()
+    const amount = 1000000n
+    const [owner, receiver] = await ethers.getSigners()
     // Deploy TestToken
     const TestToken = await ethers.getContractFactory('TestToken')
     const token = await TestToken.deploy()
@@ -41,7 +42,7 @@ describe('SimpleStorage', function () {
     const nodes = [
       toBeArray(
         keccak256(
-          abiCoder.encode(['address', 'uint'], [owner.address, 1000000]),
+          abiCoder.encode(['address', 'uint'], [receiver.address, amount]),
         ),
       ),
       randomBytes(32),
@@ -52,7 +53,7 @@ describe('SimpleStorage', function () {
     const merkleRoot = deriveMerkleRoot(nodes)
     const contract = await MerkleDistribution.deploy(token.target, merkleRoot)
     // Return
-    return { token, contract, owner, otherAccount, merkleRoot, nodes }
+    return { token, contract, owner, amount, receiver, merkleRoot, nodes }
   }
 
   describe('deployment', function () {
@@ -63,10 +64,21 @@ describe('SimpleStorage', function () {
     })
 
     it('fund the contract', async function () {
-      const balance = 1000000n
-      const { token, contract } = await loadFixture(deployFixture)
-      await token.transfer(contract.target, balance)
-      expect(await token.balanceOf(contract.target)).equal(balance)
+      const { token, contract, amount } = await loadFixture(deployFixture)
+      await token.transfer(contract.target, amount)
+      expect(await token.balanceOf(contract.target)).equal(amount)
+    })
+  })
+
+  describe('user perspective', function () {
+    it('claim', async function () {
+      const { contract, receiver, amount, nodes } = await loadFixture(
+        deployFixture,
+      )
+      const proofs = [nodes[1], toBeArray(keccak256(xor(nodes[2], nodes[3])))]
+      await expect(contract.claim(amount, proofs))
+        .to.emit(contract, 'Claim')
+        .withArgs(receiver.address, amount)
     })
   })
 
