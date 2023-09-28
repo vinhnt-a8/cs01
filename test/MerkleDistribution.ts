@@ -1,10 +1,30 @@
 import { loadFixture } from '@nomicfoundation/hardhat-toolbox/network-helpers'
 import { expect } from 'chai'
-import { AbiCoder, hexlify, keccak256, randomBytes } from 'ethers'
+import { AbiCoder, hexlify, keccak256, randomBytes, toBeArray } from 'ethers'
 import { ethers } from 'hardhat'
+import { xor } from '../src/utils'
 
 describe('SimpleStorage', function () {
   const abiCoder = new AbiCoder()
+
+  const deriveMerkleRoot = (children: Uint8Array[]): Uint8Array => {
+    if (!children.length) throw new Error('Invalid input.')
+    const clone = [...children]
+    const upper: Uint8Array[] = []
+    // Terminate
+    if (clone.length === 1) return clone[0]
+    // Recursive
+    while (true) {
+      const left = clone.shift()
+      if (left) {
+        const right = clone.shift()
+        if (right) upper.push(toBeArray(keccak256(xor(left, right))))
+        else upper.push(left)
+      } else {
+        return deriveMerkleRoot(upper)
+      }
+    }
+  }
 
   // We define a fixture to reuse the same setup in every test.
   // We use loadFixture to run this setup once, snapshot that state,
@@ -18,12 +38,21 @@ describe('SimpleStorage', function () {
     const MerkleDistribution = await ethers.getContractFactory(
       'MerkleDistribution',
     )
-    const merkleRoot = keccak256(
-      abiCoder.encode(['address', 'uint'], [owner.address, 1000000]),
-    )
+    const nodes = [
+      toBeArray(
+        keccak256(
+          abiCoder.encode(['address', 'uint'], [owner.address, 1000000]),
+        ),
+      ),
+      randomBytes(32),
+      randomBytes(32),
+      randomBytes(32),
+      randomBytes(32),
+    ]
+    const merkleRoot = deriveMerkleRoot(nodes)
     const contract = await MerkleDistribution.deploy(token.target, merkleRoot)
     // Return
-    return { token, contract, owner, otherAccount, merkleRoot }
+    return { token, contract, owner, otherAccount, merkleRoot, nodes }
   }
 
   describe('deployment', function () {
@@ -31,6 +60,13 @@ describe('SimpleStorage', function () {
       const { token, contract, merkleRoot } = await loadFixture(deployFixture)
       expect(await contract.root()).deep.equal(hexlify(merkleRoot))
       expect(await contract.token()).deep.equal(token.target)
+    })
+
+    it('fund the contract', async function () {
+      const balance = 1000000n
+      const { token, contract } = await loadFixture(deployFixture)
+      await token.transfer(contract.target, balance)
+      expect(await token.balanceOf(contract.target)).equal(balance)
     })
   })
 
