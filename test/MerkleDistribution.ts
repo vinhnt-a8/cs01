@@ -42,10 +42,11 @@ describe('SimpleStorage', function () {
     const nodes = [
       toBeArray(
         keccak256(
-          abiCoder.encode(['address', 'uint'], [receiver.address, amount]),
+          toBeArray(
+            abiCoder.encode(['address', 'uint'], [receiver.address, amount]),
+          ),
         ),
       ),
-      randomBytes(32),
       randomBytes(32),
       randomBytes(32),
       randomBytes(32),
@@ -56,58 +57,28 @@ describe('SimpleStorage', function () {
     return { token, contract, owner, amount, receiver, merkleRoot, nodes }
   }
 
-  describe('deployment', function () {
+  describe('merkle distribution', function () {
     it('get initial value of uint', async function () {
       const { token, contract, merkleRoot } = await loadFixture(deployFixture)
       expect(await contract.root()).deep.equal(hexlify(merkleRoot))
       expect(await contract.token()).deep.equal(token.target)
     })
 
-    it('fund the contract', async function () {
-      const { token, contract, amount } = await loadFixture(deployFixture)
-      await token.transfer(contract.target, amount)
-      expect(await token.balanceOf(contract.target)).equal(amount)
-    })
-  })
-
-  describe('user perspective', function () {
-    it('claim', async function () {
-      const { contract, receiver, amount, nodes } = await loadFixture(
+    it('fund & claim', async function () {
+      const { token, contract, receiver, amount, nodes } = await loadFixture(
         deployFixture,
       )
-      const proofs = [nodes[1], toBeArray(keccak256(xor(nodes[2], nodes[3])))]
-      await expect(contract.claim(amount, proofs))
+      // Fund (because each interaction is a sandbox)
+      await token.transfer(contract.target, amount)
+      expect(await token.balanceOf(contract.target)).equal(amount)
+      // Claim
+      const proofs: Uint8Array[] = [
+        nodes[1],
+        toBeArray(keccak256(xor(nodes[2], nodes[3]))),
+      ]
+      await expect(contract.connect(receiver).claim(amount, proofs))
         .to.emit(contract, 'Claim')
         .withArgs(receiver.address, amount)
     })
   })
-
-  // describe('get/set the storage', function () {
-  //   describe('calls', function () {
-  //     it('set/get hello world', async function () {
-  //       const { contract } = await loadFixture(deployFixture)
-  //       const message = 'hello world'
-  //       await contract.set(message)
-  //       expect(await contract.get()).to.equal(message)
-  //     })
-  //     it('set long message', async function () {
-  //       const { contract } = await loadFixture(deployFixture)
-  //       const message =
-  //         'this message is really long and exceeds the limit of 64 characters'
-  //       await expect(contract.set(message)).to.be.revertedWith(
-  //         'The message is too long',
-  //       )
-  //     })
-  //   })
-
-  //   describe('events', function () {
-  //     it('check Set event', async function () {
-  //       const { owner, contract } = await loadFixture(deployFixture)
-  //       const message = 'xin chao'
-  //       await expect(contract.set(message))
-  //         .to.emit(contract, 'Set')
-  //         .withArgs(owner.address, message)
-  //     })
-  //   })
-  // })
 })

@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity >=0.4.16 <0.9.0;
 
+import 'hardhat/console.sol';
 import '@openzeppelin/contracts/token/ERC20/IERC20.sol';
 
 contract MerkleDistribution {
@@ -24,7 +25,8 @@ contract MerkleDistribution {
     require(node == root, 'Invalid merkle root.');
     // Send tokens
     claimed[msg.sender] = true;
-    token.transfer(address(this), amount);
+    console.log('onchain debug:', msg.sender, amount);
+    token.transfer(msg.sender, amount);
     emit Claim(msg.sender, amount);
   }
 }
