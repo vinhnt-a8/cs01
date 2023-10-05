@@ -11,3 +11,7 @@ artifacts
 
 # Misc
 .DS_Store
+
+# Build
+dist
+docs

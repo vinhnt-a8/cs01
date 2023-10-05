@@ -15,17 +15,16 @@ contract MerkleDistribution {
     root = merkleRoot;
   }
 
-  function claim(uint amount, bytes32[] calldata proofs) public {
+  function claim(uint amount, bytes32[] calldata proof) public {
     require(!claimed[msg.sender], 'You already claimed your tokens.');
-    // Verify proofs
+    // Verify proof
     bytes32 node = keccak256(abi.encodePacked(msg.sender, amount));
-    for (uint i = 0; i < proofs.length; i++) {
-      node = keccak256(abi.encodePacked(node ^ proofs[i]));
+    for (uint i = 0; i < proof.length; i++) {
+      node = keccak256(abi.encodePacked(node ^ proof[i]));
     }
     require(node == root, 'Invalid merkle root.');
     // Send tokens
     claimed[msg.sender] = true;
-    console.log('onchain debug:', msg.sender, amount);
     token.transfer(msg.sender, amount);
     emit Claim(msg.sender, amount);
   }
