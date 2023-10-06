@@ -1,14 +1,22 @@
 import { AbiCoder, getBytes, keccak256, toBeArray } from 'ethers'
 
+/**
+ * Every receiver will be represented as a leaf node.
+ */
 export class Leaf {
+  /**
+   * Leaf constructor.
+   * @param address Receiver's address.
+   * @param amount Airdroped amount.
+   */
   constructor(
     public readonly address: string,
     public readonly amount: bigint,
   ) {}
 
   /**
-   * Hash the sibling to the parent value
-   * @returns Its hash
+   * Hash the sibling to the parent value.
+   * @returns Its hash.
    */
   get value(): Uint8Array {
     const abiCoder = new AbiCoder()
@@ -22,8 +30,8 @@ export class Leaf {
   }
 
   /**
-   * Compare 2 leafs whether yours greater than or equal
-   * @param leaf Another leaf to compare
+   * Compare 2 leaves whether yours greater than or equal.
+   * @param leaf Another leaf to compare.
    * @returns -1/0/1
    */
   gte(leaf: Leaf) {

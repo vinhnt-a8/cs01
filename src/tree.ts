@@ -1,17 +1,28 @@
 import { Leaf } from './leaf'
 import { Node } from './node'
 
+/**
+ * The merkle. By the tree, people can generate the proof and locally verify the proof.
+ */
 export class Tree {
-  public readonly leafs
-  constructor(leafs: Leaf[]) {
-    this.leafs = leafs.sort((a, b) => a.gte(b))
+  /**
+   * The list of leaves.
+   */
+  public readonly leaves
+
+  /**
+   * Tree constructor.
+   * @param leaves The list of <address,amount> represented as leaves.
+   */
+  constructor(leaves: Leaf[]) {
+    this.leaves = leaves.sort((a, b) => a.gte(b))
   }
 
   /**
-   * Merkle root
+   * The merkle root.
    */
   get root() {
-    let nodes = this.leafs.map((leaf) => new Node(leaf.value))
+    let nodes = this.leaves.map((leaves) => new Node(leaves.value))
     while (nodes.length > 1) {
       const cache: Node[] = []
       for (let i = 0; i < nodes.length; i += 2) {
@@ -24,14 +35,14 @@ export class Tree {
   }
 
   /**
-   * Generate the proof
-   * @param leaf Leaf
-   * @returns Proof - The list of nodes
+   * Generate the proof.
+   * @param leaf Leaf.
+   * @returns Proof - The list of nodes.
    */
   prove(leaf: Leaf) {
     let proof: Node[] = []
     let node = new Node(leaf.value)
-    let siblings = this.leafs.map((leaf) => new Node(leaf.value))
+    let siblings = this.leaves.map((leaf) => new Node(leaf.value))
     while (!node.eq(this.root)) {
       // Find my sibling
       const index = siblings.findIndex((sibling) => node.eq(sibling))
@@ -55,6 +66,12 @@ export class Tree {
     return proof
   }
 
+  /**
+   * Verify the proof.
+   * @param leaf The receiver info represented as a leaf.
+   * @param proof The proof to the leaf.
+   * @returns true/false
+   */
   verify(leaf: Leaf, proof: Node[]) {
     let node = new Node(leaf.value)
     for (let i = 0; i < proof.length; i++) node = node.hash(proof[i])

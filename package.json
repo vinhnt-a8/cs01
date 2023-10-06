@@ -6,6 +6,7 @@
   "scripts": {
     "compile": "hardhat compile",
     "build": "pnpm clean && hardhat compile && tsc",
+    "ci:docs": "typedoc --excludePrivate --excludeProtected ./src/index.ts",
     "test": "pnpm build && hardhat test",
     "test:watch": "nodemon --watch test --watch src --ext ts --exec 'pnpm test' --signal SIGTERM",
     "clean": "rimraf ./dist ./docs"
@@ -35,6 +36,7 @@
     "solidity-coverage": "^0.8.1",
     "ts-node": "^10.9.1",
     "typechain": "^8.2.0",
+    "typedoc": "^0.25.1",
     "typescript": "^5.2.2"
   }
 }

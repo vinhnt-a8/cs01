@@ -7,14 +7,14 @@ describe('contract', function () {
   async function deployFixture() {
     const [owner, ...receivers] = await ethers.getSigners()
     // Tree
-    const leafs: Leaf[] = Array.from(Array(10).keys()).map(
+    const leaves: Leaf[] = Array.from(Array(10).keys()).map(
       (i) =>
         new Leaf(
           receivers[i].address,
           BigInt(i + 1) * 1_000_000_000_000_000_000n,
         ),
     )
-    const tree = new Tree(leafs)
+    const tree = new Tree(leaves)
     // Deploy TestToken
     const TestToken = await ethers.getContractFactory('TestToken')
     const token = await TestToken.deploy()
@@ -27,7 +27,7 @@ describe('contract', function () {
       tree.root.value,
     )
     // Return
-    const leaf = leafs[0]
+    const leaf = leaves[0]
     const amount = leaf.amount
     const receiver = receivers.find(({ address }) => address === leaf.address)
     if (!receiver) throw new Error('Unpected error.')

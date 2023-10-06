@@ -1,6 +1,6 @@
 /**
- * Xor multiple buffers
- * @param arr The buffer list
+ * Xor multiple buffers.
+ * @param arr The buffer list.
  * @returns Uint8Array
  */
 export const xor = (...arr: Uint8Array[]): Uint8Array => {
