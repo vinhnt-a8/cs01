@@ -14,7 +14,7 @@
     "removeComments": true,
     "resolveJsonModule": true
   },
-  "include": ["src"],
+  "include": ["index.ts", "src", "abi"],
   "exclude": ["node_modules", "dist"],
   "typedocOptions": {
     "entryPoints": ["./src/index.ts"],
