@@ -10,6 +10,12 @@ export class MerkleDistribution {
   public readonly tree: Tree
   public readonly contract: Contract
 
+  /**
+   * Constructor
+   * @param opts.tree Merkle tree
+   * @param opts.wallet Merkle wallet
+   * @param opts.contractAddress (Optional) Contract address
+   */
   constructor({
     tree,
     wallet,
@@ -23,11 +29,20 @@ export class MerkleDistribution {
     this.contract = new Contract(contractAddress, abi, wallet)
   }
 
+  /**
+   * Get the airdropped ERC20 token address
+   * @returns Token address
+   */
   async token(): Promise<string> {
     const address = await this.contract.token()
     return address
   }
 
+  /**
+   * Verify receiver address
+   * @param address Wallet address
+   * @returns true/false
+   */
   async verify(address: string): Promise<boolean> {
     const leaf = this.tree.leaves.find((leaf) => leaf.address === address)
     if (!leaf) return false
@@ -39,6 +54,10 @@ export class MerkleDistribution {
     return true
   }
 
+  /**
+   * Claim my tokens
+   * @param address Wallet address
+   */
   async claim(address: string) {
     const leaf = this.tree.leaves.find((leaf) => leaf.address === address)
     if (!leaf) throw new Error('Invalid receiver')
