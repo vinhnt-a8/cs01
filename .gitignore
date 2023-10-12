@@ -16,3 +16,6 @@ artifacts
 dist
 docs
 abi
+
+# Env
+.env

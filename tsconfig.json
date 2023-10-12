@@ -1,5 +1,6 @@
 {
   "compilerOptions": {
+    "baseUrl": "./",
     "module": "commonjs",
     "target": "es2020",
     "lib": ["es2020"],
@@ -16,6 +17,9 @@
   },
   "include": ["index.ts", "src", "abi"],
   "exclude": ["node_modules", "dist"],
+  "tsc-alias": {
+    "resolveFullPaths": true
+  },
   "typedocOptions": {
     "entryPoints": ["./src/index.ts"],
     "out": "docs"
